@@ -1,21 +1,20 @@
 package com.shengdan.map_convert;
 
 /**
- * 经纬度转平面地图像素坐标
+ * 经纬度与平面地图像素坐标互转
  */
 public class MapConvert {
 
     public final static double R = 6378137;//地球半径
     public final static double EarthP = 2 * Math.PI * R;//地球赤道周长
     public final static double MAX_LATITUDE = 85.0511287798;
-    public final static int singleTileSize = 256;//单个瓦片长度
+    public final static int singleTileSize = 512;//单个瓦片长度
+    public final static double InvertEarthP = 1 / EarthP;//地球赤道周长的倒数
 
     private int mapWidth;
     private int mapHeight;
     private LatLng centerLatLng;
     private Point centerPoint;
-    private int zoom;
-    private float density = 1.0f;
     //当zoom为0时，只有一张瓦片也就是256像素,计算公式:256 * Math.pow(2, zoom)
     private double allTileSize;
 
@@ -24,10 +23,9 @@ public class MapConvert {
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
         this.centerLatLng = centerLatLng;
-        this.zoom = zoom;
-        this.density = density;
+//        this.density = density;
 
-        this.allTileSize = (singleTileSize * Math.pow(2, zoom));
+        this.allTileSize = density * singleTileSize * Math.pow(2, zoom);
         this.centerPoint = toPixel(toMercator(centerLatLng));
     }
 
@@ -43,7 +41,6 @@ public class MapConvert {
         this.mapWidth = mapWidth;
         this.mapHeight = mapHeight;
         this.centerLatLng = centerLatLng;
-        this.zoom = zoom;
         this.allTileSize = (singleTileSize * Math.pow(2, zoom));
         centerPoint = toPixel(toMercator(centerLatLng));
     }
@@ -76,8 +73,8 @@ public class MapConvert {
      * @return
      */
     private Point toPixel(Point point) {
-        point.x = density * allTileSize * (point.x * (1 / EarthP) + 0.5);
-        point.y = density * allTileSize * (point.y * -(1 / EarthP) + 0.5);
+        point.x = allTileSize * (point.x * InvertEarthP + 0.5);
+        point.y = allTileSize * (point.y * -InvertEarthP + 0.5);
         return point;
     }
 
@@ -98,21 +95,23 @@ public class MapConvert {
 
     /**
      * 像素坐标转经纬度
+     *
      * @param point
      * @return
      */
     public LatLng getLatLng(Point point) {
         double d = 180 / Math.PI;
         unPixel(subtractCenterPoint(point));
-        return new LatLng((2 * Math.atan(Math.exp(point.y / R)) - Math.PI / 2) * d,point.x * d / R);
+        return new LatLng((2 * Math.atan(Math.exp(point.y / R)) - Math.PI / 2) * d, point.x * d / R);
     }
 
     /**
      * 减去中心点坐标
+     *
      * @param point
      * @return
      */
-    public Point subtractCenterPoint(Point point){
+    public Point subtractCenterPoint(Point point) {
         point.x = point.x - mapWidth / 2 + centerPoint.x;
         point.y = point.y - mapHeight / 2 + centerPoint.y;
         return point;
@@ -120,13 +119,15 @@ public class MapConvert {
 
     /**
      * 转像素转为墨卡托坐标
+     *
      * @param point
      * @return
      */
     private Point unPixel(Point point) {
-        point.x = (point.x / (density * allTileSize) - 0.5) / (1 / EarthP);
-        point.y = (point.y / (density * allTileSize) - 0.5) / - (1 / EarthP);
+        point.x = (point.x / (allTileSize) - 0.5) / InvertEarthP;
+        point.y = (point.y / (allTileSize) - 0.5) / -InvertEarthP;
         return point;
     }
 
 }
+
