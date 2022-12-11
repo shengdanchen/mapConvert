@@ -8,7 +8,7 @@ public class MapConvert {
     public final static double R = 6378137;//地球半径
     public final static double EarthP = 2 * Math.PI * R;//地球赤道周长
     public final static double MAX_LATITUDE = 85.0511287798;
-    public final static int singleTileSize = 512;//单个瓦片长度
+    public final static int singleTileSize = 256;//单个瓦片长度
     public final static double InvertEarthP = 1 / EarthP;//地球赤道周长的倒数
 
     private int mapWidth;
@@ -67,7 +67,7 @@ public class MapConvert {
     /**
      * 将墨卡托坐标换算成像素坐标，公式如下:
      * (总像素 * (地球赤道周长的倒数 * 墨卡托坐标x+0.5),总像素 * (地球赤道周长的倒数 * 墨卡托坐标y + 0.5))
-     *
+     * 这里为什么要加0.5?
      *
      * @param point 墨卡托坐标Point
      * @return
@@ -86,12 +86,36 @@ public class MapConvert {
      * @param latLng
      * @return
      */
-    public Point getPoint(LatLng latLng) {
+    public Point getPoint(LatLng latLng, float heading) {
         Point targetPoint = toPixel(toMercator(latLng));
+
         targetPoint.x = (targetPoint.x - centerPoint.x) + mapWidth / 2;
         targetPoint.y = (targetPoint.y - centerPoint.y) + mapHeight / 2;
+        calcHeading(targetPoint, heading);
+
         return targetPoint.round();
     }
+
+    /**
+     * 根据航向角计算旋转后的坐标
+     * @param targetPoint
+     * @param rHeading
+     * @return
+     */
+    private Point calcHeading(Point targetPoint, double rHeading) {
+        double d = (targetPoint.y - mapHeight / 2) / (targetPoint.x - mapWidth / 2);//原始坐标斜率
+        double oHeading = Math.abs(Math.atan(d) * 180.0 / Math.PI);//斜率转角度
+        //以地图容器中心点为圆心、原始点为圆上点 计算出半径
+        double r = Math.sqrt(Math.pow((targetPoint.x - mapWidth / 2), 2) + Math.pow((targetPoint.y - mapHeight / 2), 2));
+
+        //计算旋转后的坐标 公式：x = 中心点x + r * cos(a) , y = 中心点y - r * sin(a)
+        targetPoint.x =  mapWidth/2 + Math.cos(Math.toRadians(oHeading + rHeading)) * r ;
+        targetPoint.y =  mapHeight/2 - Math.sin(Math.toRadians(oHeading + rHeading)) * r;
+
+        return targetPoint;
+    }
+
+
 
     /**
      * 像素坐标转经纬度
