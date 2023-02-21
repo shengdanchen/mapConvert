@@ -91,7 +91,7 @@ public class MapConvert {
 
         targetPoint.x = (targetPoint.x - centerPoint.x) + mapWidth / 2;
         targetPoint.y = (targetPoint.y - centerPoint.y) + mapHeight / 2;
-        calcHeading(targetPoint, heading);
+        calcNewPoint(targetPoint, heading);
 
         return targetPoint.round();
     }
@@ -115,7 +115,23 @@ public class MapConvert {
         return targetPoint;
     }
 
+    private  Point calcNewPoint(Point p, float angle) {
+        // calc arc
+        float l = (float) ((angle * Math.PI) / 180);
 
+        //sin/cos value
+        float cosv = (float) Math.cos(l);
+        float sinv = (float) Math.sin(l);
+
+        // calc new point
+        float newX = (float) ((p.x - mapWidth/2) * cosv - (p.y - mapHeight/2) * sinv + mapWidth/2);
+        float newY = (float) ((p.x - mapWidth/2) * sinv + (p.y - mapHeight/2) * cosv + mapHeight/2);
+
+        //update value
+        p.x = newX;
+        p.y = newY;
+        return p;
+    }
 
     /**
      * 像素坐标转经纬度
