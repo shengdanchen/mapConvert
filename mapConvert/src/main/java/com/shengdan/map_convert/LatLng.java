@@ -1,8 +1,8 @@
 package com.shengdan.map_convert;
 
 public class LatLng {
-    double lat;
-    double lng;
+    public double lat;
+    public double lng;
 
     public LatLng(double lat, double lng) {
         this.lat = lat;

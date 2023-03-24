@@ -45,6 +45,14 @@ public class MapConvert {
         centerPoint = toPixel(toMercator(centerLatLng));
     }
 
+    /**
+     * 更新中心点坐标
+     * @param centerLatLng
+     */
+    public void setCenterLatLng(LatLng centerLatLng) {
+        this.centerLatLng = centerLatLng;
+        this.centerPoint = toPixel(toMercator(centerLatLng));
+    }
 
     /**
      * 将经纬度转为平面墨卡托投影坐标
